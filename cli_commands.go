@@ -52,6 +52,11 @@ var commandList = map[string]cliCommand{
 		description: "See Pokedex info about a given pokemon",
 		callback:    commandInspect,
 	},
+	"pokedex": {
+		name:        "pokedex",
+		description: "See list of caught pokemon",
+		callback:    commandPokedex,
+	},
 }
 
 var mapConfig = config{}
