@@ -17,10 +17,37 @@ type locationResponse struct {
 }
 
 type pokemonEncounter struct {
-	Pokemon pokemon
+	Pokemon Pokemon
 }
 
-type pokemon struct {
-	Name string
-	Url  string
+type Pokemon struct {
+	Name            string
+	Base_experience int
+	Height          int
+	Weight          int
+	Hp              int
+	Attack          int
+	Defense         int
+	SpecialAttack   int
+	SpecialDefense  int
+	Speed           int
+	Types           []string
+}
+
+type pokemonResponse struct {
+	Name            string
+	Base_experience int
+	Height          int
+	Weight          int
+	Stats           []struct {
+		Base_stat int
+		Stat      struct {
+			Name string
+		}
+	}
+	Types []struct {
+		Type struct {
+			Name string
+		}
+	}
 }

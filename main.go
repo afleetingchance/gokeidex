@@ -3,9 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"goidex/internal/pokeapi"
 	"os"
 	"strings"
 )
+
+var pokedex = map[string]pokeapi.Pokemon{}
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)

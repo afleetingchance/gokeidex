@@ -59,3 +59,54 @@ func GetPokemonFromLocation(location string) (pokemon []string, err error) {
 
 	return pokemon, nil
 }
+
+func GetPokemon(pokemonName string) (pokemonResult Pokemon, err error) {
+	url := baseUrl + "pokemon/" + pokemonName
+
+	rawRes, err := http.Get(url)
+	if err != nil {
+		return pokemonResult, err
+	}
+	defer rawRes.Body.Close()
+
+	if rawRes.StatusCode != http.StatusOK {
+		return pokemonResult, errors.New(pokemonName + " does not exist")
+	}
+
+	var res pokemonResponse
+	decoder := json.NewDecoder(rawRes.Body)
+	if err := decoder.Decode(&res); err != nil {
+		return pokemonResult, err
+	}
+
+	return formatPokemonResponse(res), nil
+}
+
+func formatPokemonResponse(res pokemonResponse) (pokemon Pokemon) {
+	pokemon.Name = res.Name
+	pokemon.Base_experience = res.Base_experience
+	pokemon.Height = res.Height
+	pokemon.Weight = res.Weight
+	for _, stat := range res.Stats {
+		switch stat.Stat.Name {
+		case "hp":
+			pokemon.Hp = stat.Base_stat
+		case "attack":
+			pokemon.Attack = stat.Base_stat
+		case "defense":
+			pokemon.Defense = stat.Base_stat
+		case "special-attack":
+			pokemon.SpecialAttack = stat.Base_stat
+		case "special-defense":
+			pokemon.SpecialDefense = stat.Base_stat
+		case "speed":
+			pokemon.Speed = stat.Base_stat
+		}
+	}
+
+	for _, pokeType := range res.Types {
+		pokemon.Types = append(pokemon.Types, pokeType.Type.Name)
+	}
+
+	return pokemon
+}
