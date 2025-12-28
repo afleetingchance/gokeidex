@@ -3,25 +3,26 @@ package pokeapi
 import (
 	"encoding/json"
 	"errors"
+	"goidex/internal/pokecache"
 	"net/http"
+	"time"
 )
 
 var baseUrl string = "https://pokeapi.co/api/v2/"
+var cache *pokecache.Cache = pokecache.NewCache(time.Hour)
 
 func GetLocations(url string) (locations []string, next, previous string, err error) {
 	if url == "" {
-		url = baseUrl + "location-area"
+		url = baseUrl + "location-area?offset=0&limit=20"
 	}
 
-	rawRes, err := http.Get(url)
+	resBytes, _, err := get(url)
 	if err != nil {
 		return nil, "", "", err
 	}
-	defer rawRes.Body.Close()
 
 	var res locationsResponse
-	decoder := json.NewDecoder(rawRes.Body)
-	if err := decoder.Decode(&res); err != nil {
+	if err := json.Unmarshal(resBytes, &res); err != nil {
 		return nil, "", "", err
 	}
 
@@ -36,19 +37,17 @@ func GetLocations(url string) (locations []string, next, previous string, err er
 func GetPokemonFromLocation(location string) (pokemon []string, err error) {
 	url := baseUrl + "location-area/" + location
 
-	rawRes, err := http.Get(url)
+	resBytes, statusCode, err := get(url)
 	if err != nil {
 		return nil, err
 	}
-	defer rawRes.Body.Close()
 
-	if rawRes.StatusCode != http.StatusOK {
+	if statusCode != http.StatusOK {
 		return nil, errors.New("not a valid location")
 	}
 
 	var res locationResponse
-	decoder := json.NewDecoder(rawRes.Body)
-	if err := decoder.Decode(&res); err != nil {
+	if err := json.Unmarshal(resBytes, &res); err != nil {
 		return nil, err
 	}
 
@@ -63,50 +62,19 @@ func GetPokemonFromLocation(location string) (pokemon []string, err error) {
 func GetPokemon(pokemonName string) (pokemonResult Pokemon, err error) {
 	url := baseUrl + "pokemon/" + pokemonName
 
-	rawRes, err := http.Get(url)
+	resBytes, statusCode, err := get(url)
 	if err != nil {
 		return pokemonResult, err
 	}
-	defer rawRes.Body.Close()
 
-	if rawRes.StatusCode != http.StatusOK {
+	if statusCode != http.StatusOK {
 		return pokemonResult, errors.New(pokemonName + " does not exist")
 	}
 
 	var res pokemonResponse
-	decoder := json.NewDecoder(rawRes.Body)
-	if err := decoder.Decode(&res); err != nil {
+	if err := json.Unmarshal(resBytes, &res); err != nil {
 		return pokemonResult, err
 	}
 
 	return formatPokemonResponse(res), nil
-}
-
-func formatPokemonResponse(res pokemonResponse) (pokemon Pokemon) {
-	pokemon.Name = res.Name
-	pokemon.Base_experience = res.Base_experience
-	pokemon.Height = res.Height
-	pokemon.Weight = res.Weight
-	for _, stat := range res.Stats {
-		switch stat.Stat.Name {
-		case "hp":
-			pokemon.Hp = stat.Base_stat
-		case "attack":
-			pokemon.Attack = stat.Base_stat
-		case "defense":
-			pokemon.Defense = stat.Base_stat
-		case "special-attack":
-			pokemon.SpecialAttack = stat.Base_stat
-		case "special-defense":
-			pokemon.SpecialDefense = stat.Base_stat
-		case "speed":
-			pokemon.Speed = stat.Base_stat
-		}
-	}
-
-	for _, pokeType := range res.Types {
-		pokemon.Types = append(pokemon.Types, pokeType.Type.Name)
-	}
-
-	return pokemon
 }

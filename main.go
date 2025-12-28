@@ -32,7 +32,6 @@ func main() {
 		} else {
 			fmt.Println("Unknown command")
 		}
-		// fmt.Printf("Your command was: %s\n", cleanInput(scanner.Text())[0])
 
 	}
 }
